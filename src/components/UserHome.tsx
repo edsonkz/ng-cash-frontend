@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, DataHTMLAttributes } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "../styles/Home.css";
@@ -14,9 +14,11 @@ interface User {
 }
 
 interface Transaction {
-	id: number;
-	created_at: string;
-	value: number;
+	transactions_id?: number;
+	transactions_created_at?: string;
+	transactions_value?: number;
+	u_username?: string;
+	type: string;
 }
 
 function UserHome() {
@@ -27,8 +29,12 @@ function UserHome() {
 	const [user, setUser] = useState<User>({ id: -1, username: "Loading..." });
 	const [account, setAccount] = useState<Account>({ id: -1, balance: -1 });
 	const [username, setUsername] = useState("");
-	const [valueToTransfer, setValueToTransfer] = useState(0);
+	const [dateFilter, setDateFilter] = useState("");
+	const [valueToTransfer, setValueToTransfer] = useState("");
 	const [transactions, setTransactions] = useState<Transaction[]>([]);
+	const [transactionsFiltered, setTransactionsFiltered] = useState<
+		Transaction[]
+	>([]);
 
 	useEffect(() => {
 		console.log(location.state);
@@ -56,16 +62,57 @@ function UserHome() {
 					console.log(response);
 
 					setTransactions(response.data);
+					setTransactionsFiltered(response.data);
 				})
 				.catch((err) => {
 					console.log(err);
 				});
-
-			transactions.map((transaction) =>
-				console.log("Hello", transaction)
-			);
 		}
 	}, []);
+
+	const reloadTransactions = () => {
+		axios
+			.get("http://localhost:3333/transactions", {
+				headers: { authorization: location.state.token },
+			})
+			.then((response) => {
+				console.log(response);
+
+				setTransactions(response.data);
+				setTransactionsFiltered(response.data);
+			})
+			.catch((err) => {
+				console.log(err);
+			});
+	};
+
+	const filterCashIn = () => {
+		const filtered = transactions.filter(
+			(transaction) => transaction.type === "cashIn"
+		);
+		setTransactionsFiltered(filtered);
+	};
+
+	const filterDate = () => {
+		console.log("Data", dateFilter);
+		console.log(
+			"Data2",
+			transactions[0].transactions_created_at?.split("T")[0]
+		);
+		const filtered = transactions.filter(
+			(transaction) =>
+				transaction.transactions_created_at?.split("T")[0] ===
+				dateFilter
+		);
+		setTransactionsFiltered(filtered);
+	};
+
+	const filterCashOut = () => {
+		const filtered = transactions.filter(
+			(transaction) => transaction.type === "cashOut"
+		);
+		setTransactionsFiltered(filtered);
+	};
 
 	const logout = () => {
 		location.state = null;
@@ -75,7 +122,7 @@ function UserHome() {
 
 	const createTransaction = (event: React.FormEvent) => {
 		event.preventDefault();
-		if (valueToTransfer === 0) {
+		if (parseInt(valueToTransfer) === 0) {
 			console.log(
 				"As transferências precisam ser maiores que 0 para serem válidas."
 			);
@@ -91,7 +138,7 @@ function UserHome() {
 				"O usuário não pode fazer uma transferência para si mesmo."
 			);
 			setError(true);
-		} else if (account.balance < valueToTransfer) {
+		} else if (account.balance < parseInt(valueToTransfer)) {
 			console.log(
 				"O usuário não pode fazer uma transferência maior que o seu próprio balanço."
 			);
@@ -111,10 +158,15 @@ function UserHome() {
 				.then((response) => {
 					console.log(response.data.savedTransaction);
 					let newbalance = { ...account };
-					newbalance.balance = account.balance - valueToTransfer;
+					newbalance.balance =
+						account.balance - parseInt(valueToTransfer);
 					setNotification("Transação realizada com sucesso.");
 					setAccount(newbalance);
+					console.log(response.data.savedTransaction);
 					setTransactions(
+						transactions.concat(response.data.savedTransaction)
+					);
+					setTransactionsFiltered(
 						transactions.concat(response.data.savedTransaction)
 					);
 					setError(false);
@@ -160,7 +212,7 @@ function UserHome() {
 								placeholder="Valor da transação"
 								value={valueToTransfer}
 								onChange={(e) =>
-									setValueToTransfer(parseInt(e.target.value))
+									setValueToTransfer(e.target.value)
 								}
 							/>
 							<button>Realizar Transação</button>
@@ -169,21 +221,58 @@ function UserHome() {
 				</div>
 				<div className="container_transactions">
 					<h1 className="title">Transferências Realizadas</h1>
-					{transactions.length === 0 ? (
+					<div className="filterButtons">
+						<button className="filterB" onClick={filterCashIn}>
+							cashIn
+						</button>
+						<button className="filterB" onClick={filterCashOut}>
+							cashOut
+						</button>
+						<button
+							className="filterB"
+							onClick={reloadTransactions}
+						>
+							Todos
+						</button>
+						<input
+							type="date"
+							className="filterDate"
+							value={dateFilter}
+							onChange={(e) => setDateFilter(e.target.value)}
+						/>
+						<button className="filterB" onClick={filterDate}>
+							Filtrar Data
+						</button>
+					</div>
+					{transactionsFiltered.length === 0 ? (
 						<h1>Nenhuma transação realizada...</h1>
 					) : (
-						<table>
-							<tr>
-								<th>Valor transferido</th>
-								<th>Criado em</th>
-							</tr>
-							{transactions.map((transaction) => (
-								<tr key={transaction.id}>
-									<th>{transaction.value}</th>
-									<th>{transaction.created_at}</th>
-								</tr>
-							))}
-						</table>
+						<div>
+							<table>
+								<tbody>
+									<tr>
+										<th>Usuário participante</th>
+										<th>Tipo de Operação</th>
+										<th>Valor transferido</th>
+										<th>Data</th>
+									</tr>
+									{transactionsFiltered.map((transaction) => (
+										<tr key={transaction.transactions_id}>
+											<th>{transaction.u_username}</th>
+											<th>{transaction.type}</th>
+											<th>
+												{transaction.transactions_value}
+											</th>
+											<th>
+												{
+													transaction.transactions_created_at
+												}
+											</th>
+										</tr>
+									))}
+								</tbody>
+							</table>
+						</div>
 					)}
 					<button onClick={logout}>Sair</button>
 				</div>

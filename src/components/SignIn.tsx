@@ -1,15 +1,24 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import "../styles/SignUp.css";
 
-function SignUp() {
+function SignIn() {
+	const location = useLocation();
 	const navigate = useNavigate();
 	const [notification, setNotification] = useState("");
 	const [token, setToken] = useState("");
 	const [error, setError] = useState(false);
 	const [username, setUsername] = useState("");
 	const [password, setPassword] = useState("");
+
+	useEffect(() => {
+		console.log(location.state);
+		if (location.state !== null) {
+			console.log("Eaiiiiiiiii");
+			navigate("/home");
+		}
+	}, []);
 
 	const loginUser = (event: React.FormEvent) => {
 		event.preventDefault();
@@ -72,4 +81,4 @@ function SignUp() {
 	);
 }
 
-export default SignUp;
+export default SignIn;
