@@ -42,7 +42,7 @@ function UserHome() {
 			navigate("/login");
 		} else {
 			axios
-				.get("http://localhost:3333/balance", {
+				.get("/api/balance", {
 					headers: { authorization: location.state.token },
 				})
 				.then((response) => {
@@ -55,7 +55,7 @@ function UserHome() {
 				});
 
 			axios
-				.get("http://localhost:3333/transactions", {
+				.get("/api/transactions", {
 					headers: { authorization: location.state.token },
 				})
 				.then((response) => {
@@ -72,7 +72,7 @@ function UserHome() {
 
 	const reloadTransactions = () => {
 		axios
-			.get("http://localhost:3333/transactions", {
+			.get("/api/transactions", {
 				headers: { authorization: location.state.token },
 			})
 			.then((response) => {
@@ -122,7 +122,7 @@ function UserHome() {
 
 	const createTransaction = (event: React.FormEvent) => {
 		event.preventDefault();
-		if (parseInt(valueToTransfer) === 0) {
+		if (parseInt(valueToTransfer) === 0 || valueToTransfer.length < 1) {
 			console.log(
 				"As transferências precisam ser maiores que 0 para serem válidas."
 			);
@@ -149,7 +149,7 @@ function UserHome() {
 		} else {
 			axios
 				.post(
-					"http://localhost:3333/transactions",
+					"/api/transactions",
 					{ username, balance: valueToTransfer },
 					{
 						headers: { authorization: location.state.token },
@@ -173,6 +173,10 @@ function UserHome() {
 				})
 				.catch((err) => {
 					console.log("Esse usuário não existe.");
+					setError(true);
+					setNotification(
+						"Esse usuário não existe ou o valor do balanço não é um número."
+					);
 					console.log(err);
 				});
 		}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import axios from "axios";
 import "../styles/SignUp.css";
 
@@ -23,7 +23,7 @@ function SignIn() {
 	const loginUser = (event: React.FormEvent) => {
 		event.preventDefault();
 		axios
-			.post("http://localhost:3333/login", { username, password })
+			.post("/api/login", { username, password })
 			.then((response) => {
 				console.log(response.data.jwt);
 				setToken(response.data.jwt);
@@ -75,6 +75,17 @@ function SignIn() {
 					></input>
 
 					<button>Entrar</button>
+					<Link
+						to="/"
+						style={{
+							color: "white",
+							textAlign: "center",
+							justifyContent: "center",
+							display: "flex",
+						}}
+					>
+						Clique aqui para criar um usuário
+					</Link>
 				</form>
 			</div>
 		</div>

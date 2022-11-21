@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "../styles/SignUp.css";
 
@@ -14,7 +14,7 @@ function SignUp() {
 		event.preventDefault();
 
 		axios
-			.post("http://localhost:3333/users", { username, password })
+			.post("/api/users", { username, password })
 			.then(() => {
 				console.log("Usuário criado.");
 				setUsername("");
@@ -72,6 +72,17 @@ function SignUp() {
 					></input>
 
 					<button>Criar</button>
+					<Link
+						to="/login"
+						style={{
+							color: "white",
+							textAlign: "center",
+							justifyContent: "center",
+							display: "flex",
+						}}
+					>
+						Clique aqui para fazer o login
+					</Link>
 				</form>
 			</div>
 		</div>
